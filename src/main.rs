@@ -41,7 +41,7 @@ struct Opts {
     #[clap(long, short, about = "App name to display")]
     name: Option<String>,
 
-    #[clap(multiple = true, about = "Full path to the executable")]
+    #[clap(about = "Full path to the executable")]
     command: String,
     
     #[clap(multiple = true, about = "Arguments for the executable")]
