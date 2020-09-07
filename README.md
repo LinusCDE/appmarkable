@@ -1,16 +1,24 @@
 # appMarkable
 
-This is a fairly dumb ui, meant to be a placeholder for apps who want to be started from [draft](https://github.com/dixonary/draft-reMarkable), [oxide](https://github.com/Eeems/oxide) or [remux](https://rmkit.dev/apps/remux).
+[![rm1](https://img.shields.io/badge/rM1-supported-green)](https://remarkable.com/store/remarkable)
+[![rm2](https://img.shields.io/badge/rM2-unknown-yellow)](https://remarkable.com/store/remarkable-2)
+[![opkg](https://img.shields.io/badge/OPKG-appmarkable-blue)](https://github.com/matteodelabre/toltec)
+
+This is a fairly dumb ui, meant to be a placeholder for apps who want to be started from [draft](https://github.com/dixonary/draft-reMarkable), [oxide](https://github.com/Eeems/oxide) and [remux](https://rmkit.dev/apps/remux).
+
+Example for [rmWacomToMouse/rmServeWacomInput](https://github.com/LinusCDE/rmWacomToMouse):
+
+<img width="50%" src="https://transfer.cosmos-ink.net/jMCkZ/192.168.2.93.jpg">
 
 ## Usage
 
 ```
 USAGE:
-    appmarkable [OPTIONS] <command>... [args]...
+    appmarkable [OPTIONS] <command> [args]...
 
 ARGS:
-    <command>...    Full path to the executable
-    <args>...       Arguments for the executable
+    <command>    Full path to the executable
+    <args>...    Arguments for the executable
 
 FLAGS:
     -h, --help       Prints help information
