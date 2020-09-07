@@ -49,7 +49,7 @@ imgFile=myawesomeapp
 
 Also don't forget to make you package depend on appmarkable to make sure it is installed.
 
-Now you have some UI that just signals that your app is running. The user can quit it by pressing the power and home buttons together (which sends a SIGINT just like CTRL+C would).
+Now you have some UI that just signals that your app is running. The user can quit it by pressing the power and right button together (which sends a SIGINT just like CTRL+C would).
 
 ## Step it up a notch
 
