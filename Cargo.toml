@@ -1,6 +1,6 @@
 [package]
 name = "appmarkable"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Linus <linus@cosmos-ink.net>"]
 edition = "2018"
 

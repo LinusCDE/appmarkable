@@ -90,7 +90,7 @@ fn main() {
     if let Some(custom_image_path) = opts.custom_image {
         draw_custom_image(&mut canvas, &custom_image_path);
         warn!("Using a custom image will NOT display how to quit the app.");
-        warn!("To quit the app, press power and home together.");
+        warn!("To quit the app, press power and right together.");
     }else if let Some(icon_path) = opts.icon {
         draw_base(&mut canvas);
         draw_icon_and_name(&mut canvas, &name, opts.icon_size, &icon_path);
@@ -107,7 +107,7 @@ fn main() {
     // Input loop and waiting for process to exit
     let pause_duration = Duration::from_millis(150);
     let mut power_pressed = false;
-    let mut home_pressed = false;
+    let mut right_pressed = false;
     let mut last_status_rect: Option<mxcfb_rect> = None;
     loop {
         let before_input = SystemTime::now();
@@ -119,14 +119,14 @@ fn main() {
                     GPIOEvent::Press { button } => {
                         match button {
                             PhysicalButton::POWER => power_pressed = true,
-                            PhysicalButton::MIDDLE => home_pressed = true,
+                            PhysicalButton::RIGHT => right_pressed = true,
                             _ => {}
                         }
                     },
                     GPIOEvent::Unpress { button } => {
                         match button {
                             PhysicalButton::POWER => power_pressed = false,
-                            PhysicalButton::MIDDLE => home_pressed = false,
+                            PhysicalButton::RIGHT => right_pressed = false,
                             _ => {}
                         }
                     },
@@ -136,10 +136,10 @@ fn main() {
         }
 
         // Check if user requested quiting (using buttons or the terminal)
-        if (home_pressed && power_pressed)
+        if (right_pressed && power_pressed)
             || sigint_received.load(Ordering::Relaxed) || sigterm_received.load(Ordering::Relaxed) {
             // Prevent running this code again is triggered with buttons (dirty hack)
-            home_pressed = false;
+            right_pressed = false;
             power_pressed = false;
             
             info!("Termination requested by user. Killing {}...", &opts.command);
@@ -185,7 +185,7 @@ fn main() {
 
 fn draw_base(canvas: &mut Canvas) {
     // Draw centered text
-    canvas.draw_text(cgmath::Point2 { x: None, y: Some(1872 - 30) }, "Press the power and home button together to manually quit.", 35.0);
+    canvas.draw_text(cgmath::Point2 { x: None, y: Some(1872 - 30) }, "Press the power and right button together to manually quit.", 35.0);
 }
 
 fn draw_name(canvas: &mut Canvas, name: &str) {
