@@ -2,7 +2,7 @@
 
 [![rm1](https://img.shields.io/badge/rM1-supported-green)](https://remarkable.com/store/remarkable)
 [![rm2](https://img.shields.io/badge/rM2-unknown-yellow)](https://remarkable.com/store/remarkable-2)
-[![opkg](https://img.shields.io/badge/OPKG-appmarkable-blue)](https://github.com/matteodelabre/toltec)
+[![opkg](https://img.shields.io/badge/OPKG-appmarkable-blue)](https://github.com/toltec-dev/toltec)
 
 This is a fairly dumb ui, meant to be a placeholder for apps who want to be started from [draft](https://github.com/dixonary/draft-reMarkable), [oxide](https://github.com/Eeems/oxide) and [remux](https://rmkit.dev/apps/remux).
 
