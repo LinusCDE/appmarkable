@@ -1,7 +1,7 @@
 # appMarkable
 
 [![rm1](https://img.shields.io/badge/rM1-supported-green)](https://remarkable.com/store/remarkable)
-[![rm2](https://img.shields.io/badge/rM2-unknown-yellow)](https://remarkable.com/store/remarkable-2)
+[![rm2](https://img.shields.io/badge/rM2-unsupported-red)](https://remarkable.com/store/remarkable-2)
 [![opkg](https://img.shields.io/badge/OPKG-appmarkable-blue)](https://github.com/toltec-dev/toltec)
 
 This is a fairly dumb ui, meant to be a placeholder for apps who want to be started from [draft](https://github.com/dixonary/draft-reMarkable), [oxide](https://github.com/Eeems/oxide) and [remux](https://rmkit.dev/apps/remux).
@@ -62,3 +62,7 @@ Now you have some UI that just signals that your app is running. The user can qu
 ## Step it up a notch
 
 If you want more control over the design, you can also just provide a full image to display instead with `--custom-image`. Though please tell the user how to quit the app, is it isn't done in this mode.
+
+## reMarkable 2 support
+
+As of now, the new framebuffer is not yet figured out. As soon as that happens and libremarkable gets updated, I can fix this sw to work on the rM 2.
