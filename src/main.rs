@@ -2,12 +2,13 @@
 extern crate log;
 
 use libremarkable::input::{
-    gpio::GPIOEvent,
-    gpio::PhysicalButton,
+    multitouch::MultitouchEvent,
     InputDevice,
     InputEvent,
     ev::EvDevContext,
+    InputDeviceState,
 };
+use libremarkable::framebuffer::common::{DISPLAYHEIGHT, DISPLAYWIDTH};
 use libremarkable::{image, cgmath};
 use nix::unistd::Pid;
 use nix::sys::signal::{self, Signal};
@@ -24,7 +25,11 @@ use wait_timeout::ChildExt;
 
 mod canvas;
 
-use canvas::{Canvas, mxcfb_rect};
+use canvas::{Canvas, mxcfb_rect, Point2};
+
+const CORNER_SIZE: u32 = 100;
+const CORNER_BOTTOM_LEFT: mxcfb_rect = mxcfb_rect { top: DISPLAYHEIGHT as u32 - CORNER_SIZE, left: 0, width: CORNER_SIZE, height: CORNER_SIZE };
+const CORNER_BOTTOM_RIGHT: mxcfb_rect = mxcfb_rect { top: DISPLAYHEIGHT as u32 - CORNER_SIZE, left: DISPLAYWIDTH as u32 - CORNER_SIZE, width: CORNER_SIZE, height: CORNER_SIZE };
 
 #[derive(Clap, Debug)]
 #[clap(version = crate_version!(), author = crate_authors!())]
@@ -69,7 +74,7 @@ fn main() {
         error!("Icon size invalid. Must be between 50 and 1404!");
         exit(1);
     }
-    
+
     // Find app name
     let name = if let Some(app_name) = opts.name {
         app_name.clone()
@@ -86,11 +91,11 @@ fn main() {
     // Draw screen
     let mut canvas = Canvas::new();
     canvas.clear();
-    
+
     if let Some(custom_image_path) = opts.custom_image {
         draw_custom_image(&mut canvas, &custom_image_path);
         warn!("Using a custom image will NOT display how to quit the app.");
-        warn!("To quit the app, press power and right together.");
+        warn!("To quit the app, touch both bottom corners.");
     }else if let Some(icon_path) = opts.icon {
         draw_base(&mut canvas);
         draw_icon_and_name(&mut canvas, &name, opts.icon_size, &icon_path);
@@ -102,46 +107,48 @@ fn main() {
 
     // Setting up gpio input
     let (input_tx, input_rx) = std::sync::mpsc::channel::<InputEvent>();
-    EvDevContext::new(InputDevice::GPIO, input_tx).start();
-    
+    let mut ev_context = EvDevContext::new(InputDevice::Multitouch, input_tx);
+    ev_context.start();
+
     // Input loop and waiting for process to exit
     let pause_duration = Duration::from_millis(150);
-    let mut power_pressed = false;
-    let mut right_pressed = false;
     let mut last_status_rect: Option<mxcfb_rect> = None;
     loop {
         let before_input = SystemTime::now();
 
         // Process input events
-        for event in input_rx.try_iter() {
-            if let InputEvent::GPIO { event: gpio_event } = event {
-                match gpio_event {
-                    GPIOEvent::Press { button } => {
-                        match button {
-                            PhysicalButton::POWER => power_pressed = true,
-                            PhysicalButton::RIGHT => right_pressed = true,
-                            _ => {}
-                        }
-                    },
-                    GPIOEvent::Unpress { button } => {
-                        match button {
-                            PhysicalButton::POWER => power_pressed = false,
-                            PhysicalButton::RIGHT => right_pressed = false,
-                            _ => {}
-                        }
-                    },
-                    _ => { }
+        let mut was_press = false;
+        for input_event in input_rx.try_iter() {
+            if let InputEvent::MultitouchEvent { event: mt_event } = input_event {
+                if let MultitouchEvent::Press { .. } = mt_event {
+                    was_press = true;
                 }
             }
         }
 
+        let fingers = match ev_context.state {
+            InputDeviceState::MultitouchState(ref state) => {
+                state.fingers.lock().expect("Failed to lock finger states")
+            }
+            _ => panic!("Unexpected!")
+        };
+
+        let trigger_quit = if was_press && fingers.values().filter(|f| f.pressed).count() == 2 {
+            let hitting_bottom_left = fingers.values().filter(|f| f.pressed).any(|f| Canvas::is_hitting(f.pos, CORNER_BOTTOM_LEFT));
+            let hitting_bottom_right = fingers.values().filter(|f| f.pressed).any(|f| Canvas::is_hitting(f.pos, CORNER_BOTTOM_RIGHT));
+
+            hitting_bottom_left && hitting_bottom_right
+        }else {
+            false
+        };
+        drop(fingers); // Prevent mutex from being locked even when waiting
+
+
         // Check if user requested quiting (using buttons or the terminal)
-        if (right_pressed && power_pressed)
+        if (trigger_quit)
             || sigint_received.load(Ordering::Relaxed) || sigterm_received.load(Ordering::Relaxed) {
-            // Prevent running this code again is triggered with buttons (dirty hack)
-            right_pressed = false;
-            power_pressed = false;
-            
+            /////// // Prevent running this code again is triggered with buttons (dirty hack)
+
             info!("Termination requested by user. Killing {}...", &opts.command);
             if let Some(rect) = last_status_rect { canvas.clear_area(&rect); }
             last_status_rect = Some(canvas.draw_text(cgmath::Point2 { x: None, y: Some(1872 - 300)}, "Killing process...", 60.0));
@@ -150,13 +157,13 @@ fn main() {
             if let Err(e) = kill_process(&mut proc) {
                 error!("kill_process() failed: {}", e);
                 info!("The application will continue to run until either the process terminates or killing succeeds.");
-                
+
                 canvas.clear_area(&last_status_rect.unwrap());
                 last_status_rect = Some(canvas.draw_text(cgmath::Point2 { x: None, y: Some(1872 - 300)}, &format!("Failed to kill {}", &opts.command), 60.0));
                 canvas.update_partial(&last_status_rect.unwrap());
                 continue;
             }
-            
+
             info!("Process was successfully killed. Exiting...");
 
             // Clear screen
@@ -185,7 +192,9 @@ fn main() {
 
 fn draw_base(canvas: &mut Canvas) {
     // Draw centered text
-    canvas.draw_text(cgmath::Point2 { x: None, y: Some(1872 - 30) }, "Press the power and right button together to manually quit.", 35.0);
+    canvas.draw_text(cgmath::Point2 { x: None, y: Some(1872 - 30) }, "Touch both bottom corners to manually quit.", 35.0);
+    canvas.draw_rect(Point2 { x: Some(CORNER_BOTTOM_LEFT.left as i32), y: Some(CORNER_BOTTOM_LEFT.top as i32) }, CORNER_BOTTOM_LEFT.size().into(), 1);
+    canvas.draw_rect(Point2 { x: Some(CORNER_BOTTOM_RIGHT.left as i32), y: Some(CORNER_BOTTOM_RIGHT.top as i32) }, CORNER_BOTTOM_RIGHT.size().into(), 1);
 }
 
 fn draw_name(canvas: &mut Canvas, name: &str) {
