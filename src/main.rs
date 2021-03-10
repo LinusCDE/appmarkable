@@ -9,7 +9,7 @@ use libremarkable::input::{
     InputDeviceState,
 };
 use libremarkable::framebuffer::common::{DISPLAYHEIGHT, DISPLAYWIDTH};
-use libremarkable::{image, cgmath};
+use libremarkable::{image, cgmath, device::{CURRENT_DEVICE, Model}};
 use nix::unistd::Pid;
 use nix::sys::signal::{self, Signal};
 use signal_hook;
@@ -54,17 +54,26 @@ struct Opts {
 }
 
 fn main() {
-    let sigint_received = Arc::new(AtomicBool::new(false));
-    let sigterm_received = Arc::new(AtomicBool::new(false));
-    signal_hook::flag::register(signal_hook::SIGINT, Arc::clone(&sigint_received)).expect("Failed to register SIGINT handler.");
-    signal_hook::flag::register(signal_hook::SIGTERM, Arc::clone(&sigterm_received)).expect("Failed to register SIGTERM handler.");
-
     // Setting up logging
     if let Err(_) = env::var("RUST_LOG") {
         // Default logging level: "info" instead of "error"
         env::set_var("RUST_LOG", "INFO");
     }
     env_logger::init();
+
+    if CURRENT_DEVICE.model == Model::Gen2 && std::env::var_os("LD_PRELOAD").is_none() {
+        error!("You executed appmarkable on a reMarkable 2 without having LD_PRELOAD set.");
+        error!("      This suggests that you didn't use/enable rm2fb. Without rm2fb you");
+        error!("      won't see anything on the display!");
+        error!("      ");
+        error!("      See https://github.com/ddvk/remarkable2-framebuffer/ on how to solve");
+        error!("      this. Launchers (installed through toltec) should automatically do this.");
+    }
+
+    let sigint_received = Arc::new(AtomicBool::new(false));
+    let sigterm_received = Arc::new(AtomicBool::new(false));
+    signal_hook::flag::register(signal_hook::SIGINT, Arc::clone(&sigint_received)).expect("Failed to register SIGINT handler.");
+    signal_hook::flag::register(signal_hook::SIGTERM, Arc::clone(&sigterm_received)).expect("Failed to register SIGTERM handler.");
 
     // Parsing arguments
     let opts: Opts = Opts::parse();
@@ -147,7 +156,6 @@ fn main() {
         // Check if user requested quiting (using buttons or the terminal)
         if (trigger_quit)
             || sigint_received.load(Ordering::Relaxed) || sigterm_received.load(Ordering::Relaxed) {
-            /////// // Prevent running this code again is triggered with buttons (dirty hack)
 
             info!("Termination requested by user. Killing {}...", &opts.command);
             if let Some(rect) = last_status_rect { canvas.clear_area(&rect); }
