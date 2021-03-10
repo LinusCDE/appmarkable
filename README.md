@@ -1,7 +1,7 @@
 # appMarkable
 
 [![rm1](https://img.shields.io/badge/rM1-supported-green)](https://remarkable.com/store/remarkable)
-[![rm2](https://img.shields.io/badge/rM2-unsupported-red)](https://remarkable.com/store/remarkable-2)
+[![rm2](https://img.shields.io/badge/rM2-supported-green)](https://remarkable.com/store/remarkable-2)
 [![opkg](https://img.shields.io/badge/OPKG-appmarkable-blue)](https://github.com/toltec-dev/toltec)
 
 This is a fairly dumb ui, meant to be a placeholder for apps who want to be started from [draft](https://github.com/dixonary/draft-reMarkable), [oxide](https://github.com/Eeems/oxide) and [remux](https://rmkit.dev/apps/remux).
@@ -33,9 +33,9 @@ OPTIONS:
 
 ## Quick start
 
-If you decided to make your app accessible as a package (ipkg) and wan't to have a place in above mentioned launchers, you can specify the same name and icon as used in the oxide file (full path though).
+If you decided to make your app accessible as a package (ipkg) and wan't to have a place in above mentioned launchers, you can specify the same name and icon as used in the draft file (full path though).
 
-The following oxide file
+The following draft file
 
 ```
 name=myAwesomeApp
@@ -50,10 +50,19 @@ would turn into
 ```
 name=myAwesomeApp
 desc=This is my really cool app
-call=/opt/bin/appmarkable /opt/bin/myawesomeapp -n myAwesomeApp -i /opt/etc/draft/icons/myawesomeapp.png
+call=/opt/bin/myawesomeapp_gui
 term=:
 imgFile=myawesomeapp
 ```
+
+where `/opt/bin/myawesomeapp_gui` is a shell script containing the command to launch the app
+
+```bash
+#!/bin/bash
+/opt/bin/appmarkable /opt/bin/myawesomeapp -n myAwesomeApp -i /opt/etc/draft/icons/myawesomeapp.png
+```
+
+(the extra script is because not all launchers support cli options in the call entry for draft)
 
 Also don't forget to make you package depend on appmarkable to make sure it is installed.
 
