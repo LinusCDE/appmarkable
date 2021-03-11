@@ -50,12 +50,12 @@ would turn into
 ```
 name=myAwesomeApp
 desc=This is my really cool app
-call=/opt/bin/myawesomeapp_gui
+call=/opt/bin/myawesomeapp-gui
 term=:
 imgFile=myawesomeapp
 ```
 
-where `/opt/bin/myawesomeapp_gui` is a shell script containing the command to launch the app
+where `/opt/bin/myawesomeapp-gui` is a shell script containing the command to launch the app
 
 ```bash
 #!/bin/bash
