@@ -1,6 +1,6 @@
 [package]
 name = "appmarkable"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Linus <linus@cosmos-ink.net>"]
 edition = "2018"
 
@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 clap = "3.0.0-beta.1"
 env_logger = "0.7.1"
-libremarkable = { git = "https://github.com/LinusCDE/libremarkable.git", rev = "ac455a99" }
+libremarkable = { git = "https://github.com/LinusCDE/libremarkable.git", rev = "ee378a88" }
 log = "0.4.11"
 nix = "0.18.0"
 signal-hook = "0.1.16"

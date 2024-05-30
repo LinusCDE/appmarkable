@@ -2,9 +2,7 @@ pub use libremarkable::framebuffer::{
     common::mxcfb_rect,
     cgmath::Point2,
     cgmath::Vector2,
-    FramebufferBase,
     FramebufferDraw,
-    FramebufferIO,
     FramebufferRefresh,
     core::Framebuffer,
     common::DISPLAYWIDTH,
@@ -15,26 +13,26 @@ use libremarkable::framebuffer::{
     common::waveform_mode,
     common::display_temp,
     common::dither_mode,
-    refresh::PartialRefreshMode
+    PartialRefreshMode,
 };
 use libremarkable::image;
 use std::ops::DerefMut;
 use std::time::SystemTime;
 
-pub struct Canvas<'a> {
-    framebuffer: Box::<Framebuffer<'a>>,
+pub struct Canvas {
+    framebuffer: Box::<Framebuffer>,
 }
 
-impl<'a> Canvas<'a> {
+impl Canvas {
     pub fn new() -> Self {
         Self {
-            framebuffer: Box::new(Framebuffer::from_path("/dev/fb0")),
+            framebuffer: Box::new(Framebuffer::new()),
         }
     }
 
-    pub fn framebuffer_mut(&mut self) -> &'static mut Framebuffer<'static> {
+    pub fn framebuffer_mut(&mut self) -> &'static mut Framebuffer {
         unsafe {
-            std::mem::transmute::<_, &'static mut Framebuffer<'static>>(
+            std::mem::transmute::<_, &'static mut Framebuffer>(
                 self.framebuffer.deref_mut(),
             )
         }
@@ -74,7 +72,7 @@ impl<'a> Canvas<'a> {
         let mut pos = pos;
         if pos.x.is_none() || pos.y.is_none() {
             // Do dryrun to get text size
-            let rect = self.framebuffer_mut().draw_text(Point2 { x: 0.0, y: DISPLAYHEIGHT as f32 }, text.to_owned(), size, color::BLACK, true);
+            let rect = self.framebuffer_mut().draw_text(Point2 { x: 0.0, y: DISPLAYHEIGHT as f32 }, text, size, color::BLACK, true);
         
             if pos.x.is_none() {
                 // Center horizontally
@@ -88,7 +86,7 @@ impl<'a> Canvas<'a> {
         }
         let pos = Point2 { x: pos.x.unwrap() as f32, y: pos.y.unwrap() as f32 };
 
-        self.framebuffer_mut().draw_text(pos, text.to_owned(), size, color::BLACK, false)
+        self.framebuffer_mut().draw_text(pos, text, size, color::BLACK, false)
     }
 
     pub fn draw_rect(&mut self, pos: Point2<Option<i32>>, size: Vector2<u32>, border_px: u32,) -> mxcfb_rect {
@@ -126,8 +124,8 @@ impl<'a> Canvas<'a> {
         
         let color_bg_gray = 1.0; // 1 = White ; 0 = Black // The background
 
-        let rgba = img.to_rgba();
-        let mut rgb = img.to_rgb();
+        let rgba = img.to_rgba8();
+        let mut rgb = img.to_rgb8();
         for (x, y, pixel) in rgba.enumerate_pixels() {
             let color_pix = [pixel[0] as f32 / 255.0, pixel[1] as f32 / 255.0, pixel[2] as f32 / 255.0];
             let color_alpha = (255 - pixel[3]) as f32 / 255.0;
@@ -150,7 +148,7 @@ impl<'a> Canvas<'a> {
     }
 
     pub fn draw_image(&mut self, pos: Point2<Option<i32>>, img: &image::DynamicImage, insert_white_background: bool) -> mxcfb_rect {
-        let rgb_img = if insert_white_background { Self::to_rgb_with_white_bg(img) } else { img.to_rgb() };
+        let rgb_img = if insert_white_background { Self::to_rgb_with_white_bg(img) } else { img.to_rgb8() };
         let mut pos = pos;
         if pos.x.is_none() || pos.y.is_none() {
             if pos.x.is_none() {
@@ -174,6 +172,7 @@ impl<'a> Canvas<'a> {
         }
     }
 
+    #[allow(unused)]
     pub fn draw_button(&mut self, pos: Point2<Option<i32>>, text: &str, font_size: f32, vgap: u32, hgap: u32) -> mxcfb_rect {
         let text_rect = self.draw_text(pos, text, font_size);
         self.draw_rect(

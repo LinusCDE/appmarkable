@@ -2,7 +2,7 @@
 extern crate log;
 
 use libremarkable::input::{
-    multitouch::MultitouchEvent,
+    MultitouchEvent,
     InputDevice,
     InputEvent,
     ev::EvDevContext,
@@ -218,7 +218,7 @@ fn draw_icon_and_name(canvas: &mut Canvas, name: &str, icon_size: u16, icon_path
     let img_rect = match image::open(icon_path) {
         Ok(icon) => {
             let start = SystemTime::now();
-            let resized = icon.resize(icon_size as u32, icon_size as u32, image::FilterType::Lanczos3);
+            let resized = icon.resize(icon_size as u32, icon_size as u32, image::imageops::FilterType::Lanczos3);
             debug!("Resizing image took {:?}", start.elapsed().unwrap()); // Prints when env RUST_LOG=debug
             canvas.draw_image(cgmath::Point2 { x: None /* Center */, y: None /* Center */ }, &resized, true)
         },
@@ -238,9 +238,9 @@ fn draw_icon_and_name(canvas: &mut Canvas, name: &str, icon_size: u16, icon_path
 
 fn draw_custom_image(canvas: &mut Canvas, image_path: &str) {
     info!("Drawing custom icon screen...");
-    let img_rect = match image::open(image_path) {
+    match image::open(image_path) {
         Ok(img) => {
-            canvas.draw_image(cgmath::Point2 { x: None /* Center */, y: None /* Center */ }, &img, true)
+            canvas.draw_image(cgmath::Point2 { x: None /* Center */, y: None /* Center */ }, &img, true);
         },
         Err(e) => {
             error!("Failed to load custom image: {}", e);
