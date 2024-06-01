@@ -61,8 +61,8 @@ fn main() {
     }
     env_logger::init();
 
-    if CURRENT_DEVICE.model == Model::Gen2 && std::env::var_os("LD_PRELOAD").is_none() {
-        error!("You executed appmarkable on a reMarkable 2 without having LD_PRELOAD set.");
+    if CURRENT_DEVICE.model == Model::Gen2 && std::env::var_os("RM2FB_ACTIVE").is_none() {
+        error!("You executed appmarkable on a reMarkable 2 without using rm2fb-client.");
         error!("      This suggests that you didn't use/enable rm2fb. Without rm2fb you");
         error!("      won't see anything on the display!");
         error!("      ");
